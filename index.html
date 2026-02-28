@@ -3,71 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>環境聲響偵測輔助器 (三重進度條 + iOS 破解版)</title>
+    <title>環境聲響與 AI 語音雙引擎輔助器</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            transition: background-color 0.3s ease;
-        }
-        #container {
-            text-align: center;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 90%;
-            width: 420px; 
-            box-sizing: border-box;
-        }
-        h1 { color: #333; margin-top: 0; font-size: 22px;}
-        p { color: #666; font-size: 14px; margin-bottom: 20px;}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f0f0f0; transition: background-color 0.3s ease; }
+        #container { text-align: center; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 95%; width: 480px; box-sizing: border-box; margin: 20px 0; }
+        h1 { color: #333; margin-top: 0; font-size: 24px;}
+        p { color: #666; font-size: 14px; margin-bottom: 15px;}
         
-        #status {
-            font-size: 26px; 
-            font-weight: bold;
-            margin: 15px 0;
-            color: #555;
-            min-height: 50px;
-            line-height: 1.4;
-        }
+        #status { font-size: 22px; font-weight: bold; margin: 15px 0; color: #555; min-height: 50px; line-height: 1.4; }
         
-        /* 控制面板 */
-        .control-panel { background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: left; border: 1px solid #e9ecef; }
-        .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #495057; font-size: 14px; }
+        /* 控制面板區 */
+        .control-panel { background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #e9ecef; }
+        .control-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: #495057; font-size: 15px; }
         .slider-container { display: flex; align-items: center; gap: 10px; }
-        input[type="range"] { flex-grow: 1; cursor: pointer; }
-        #thresholdValue { font-weight: bold; color: #007bff; min-width: 30px; text-align: right; }
-
-        #freqAnalysis { font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; display: none; }
-        .freq-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; font-size: 11px; }
-
-        /* 進度條區塊 */
-        .progress-section { text-align: left; margin-bottom: 15px;}
-        .progress-label { font-size: 12px; color: #555; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
-        .progress-container { width: 100%; height: 12px; background-color: #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+        input[type="range"] { flex-grow: 1; cursor: pointer; height: 20px; }
+        .debug-volume { background: #e3f2fd; padding: 8px; border-radius: 8px; margin-top: 10px; font-size: 14px; font-weight: bold; color: #0277bd; display: flex; justify-content: space-between;}
         
-        /* 三條進度條的顏色與動畫 */
+        /* 語音翻譯顯示區 */
+        .transcript-box { background-color: #2c3e50; color: #ecf0f1; border-radius: 10px; padding: 15px; margin-bottom: 15px; min-height: 60px; text-align: left; font-size: 15px;}
+        .transcript-label { font-size: 12px; color: #95a5a6; margin-bottom: 5px; font-weight: bold; }
+        #interimText { color: #bdc3c7; font-style: italic; } 
+        #finalText { font-weight: bold; color: #fff; } 
+        
+        /* 進度條區 */
+        .progress-section { text-align: left; margin-bottom: 20px;}
+        .progress-label { font-size: 14px; color: #333; margin-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between;}
+        .progress-container { width: 100%; height: 16px; background-color: #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+        
         #fireProgressBar { height: 100%; width: 0%; background-color: #f44336; transition: width 0.1s linear; }
         #carProgressBar { height: 100%; width: 0%; background-color: #2196f3; transition: width 0.1s linear; }
-        #momProgressBar { height: 100%; width: 0%; background-color: #ff9800; transition: width 0.1s linear; }
-
-        button { padding: 15px 40px; font-size: 18px; font-weight: bold; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 8px; transition: 0.2s; width: 100%; }
+        #momProgressBar { height: 100%; width: 0%; background-color: #ff9800; transition: width 0.2s ease-out; }
+        
+        button { padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 10px; transition: 0.2s; width: 100%; }
         button:hover { background-color: #0056b3; }
         button.stop { background-color: #dc3545; }
-        button.stop:hover { background-color: #a71d2a; }
-
+        
         /* 警報閃爍動畫 */
         .alert-fire { animation: flashFire 0.6s infinite alternate; }
         .alert-car { animation: flashCar 0.6s infinite alternate; }
         .alert-mom { animation: flashMom 0.4s infinite alternate; } 
-        
         @keyframes flashFire { from { background-color: #ffcccc; } to { background-color: #ff0000; } }
         @keyframes flashCar { from { background-color: #bbdefb; } to { background-color: #1976d2; } }
         @keyframes flashMom { from { background-color: #ffe0b2; } to { background-color: #ff9800; } }
@@ -75,34 +49,39 @@
 </head>
 <body>
     <div id="container">
-        <h1>🔔 聲響偵測輔助</h1>
-        <p>自動儲存音量門檻，能分辨三種不同聲響。</p>
+        <h1>🔔 聲響與語音雙引擎</h1>
+        <p>頻率偵測火警/汽車，AI 語音尋找特定名字。</p>
         
         <div class="control-panel">
             <div class="control-header">
-                <span>音量觸發門檻 (靈敏度)</span>
-                <span id="thresholdValue">90</span>
+                <span>火警/汽車觸發門檻</span>
+                <span id="thresholdValue" style="color:#007bff">80</span>
             </div>
             <div class="slider-container">
                 <span style="font-size: 12px; color: #888;">靈敏</span>
-                <input type="range" id="thresholdSlider" min="10" max="200" value="90">
+                <input type="range" id="thresholdSlider" min="10" max="150" value="80">
                 <span style="font-size: 12px; color: #888;">遲鈍</span>
             </div>
-            
-            <div id="freqAnalysis">
-                目前分析：<span id="currentPitch" style="font-weight: bold;">--</span> 
-                (<span id="hzDisplay">0</span> Hz)
+            <div class="debug-volume">
+                <span>🎤 當前音量：<span id="currentVolumeDisplay">0</span></span>
+                <span>🎧 頻率：<span id="hzDisplay">0</span> Hz</span>
             </div>
         </div>
 
+        <div class="transcript-box">
+            <div class="transcript-label">🤖 AI 語音即時翻譯 (廣東話)：</div>
+            <span id="finalText"></span>
+            <span id="interimText">等待聲音輸入...</span>
+        </div>
+
         <div class="progress-section">
-            <div class="progress-label"><span>🔥 火警鐘聲 (>1800Hz, 滿 4 秒)</span></div>
+            <div class="progress-label"><span>🔥 火警鐘聲 (>1800Hz)</span></div>
             <div class="progress-container"><div id="fireProgressBar"></div></div>
             
-            <div class="progress-label" style="margin-top: 10px;"><span>🚗 汽車喇叭 (300~1500Hz, 滿 2 秒)</span></div>
+            <div class="progress-label"><span>🚗 汽車喇叭 (300~800Hz)</span></div>
             <div class="progress-container"><div id="carProgressBar"></div></div>
 
-            <div class="progress-label" style="margin-top: 10px;"><span>👩‍🦱 媽咪鬧人 (1500~1800Hz, 滿 3 秒)</span></div>
+            <div class="progress-label"><span>👩‍🦱 呼叫名字 (AI 辨識 "俊傑")</span></div>
             <div class="progress-container"><div id="momProgressBar"></div></div>
         </div>
 
@@ -110,9 +89,8 @@
         <button id="toggleBtn">開始監聽</button>
     </div>
 
-    <audio id="hiddenAudioPlayer" autoplay muted playsinline style="display: none;"></audio>
-
     <script>
+        // --- 變數宣告 ---
         let audioContext;
         let analyser;
         let microphone;
@@ -120,30 +98,82 @@
         let animationId;
         let alarmTriggered = false;
         
-        let VOLUME_THRESHOLD = 90;           
-        const WINDOW_SIZE_MS = 8000;           
+        let VOLUME_THRESHOLD = 80;           
+        const WINDOW_SIZE_MS = 6000;           
         
-        // 觸發時間要求 (毫秒)
-        const REQUIRED_FIRE_MS = 4000;  // 火警 4 秒
-        const REQUIRED_CAR_MS = 2000;   // 汽車 2 秒
-        const REQUIRED_MOM_MS = 3000;   // 媽咪 3 秒
+        const REQUIRED_FIRE_MS = 3500; // 火警需要持續 3.5 秒
+        const REQUIRED_CAR_MS = 1500;  // 汽車喇叭持續 1.5 秒
+        let momProgress = 0;           // 語音辨識的進度
 
         let soundHistory = []; 
         let lastFrameTime = 0; 
 
+        // 🚨 這裡設定要觸發警報的關鍵字！
+        const MOM_KEYWORDS = ["俊傑", "衰仔", "死仔", "激死我", "聽話"];
+
+        // --- 取得 HTML 元素 ---
         const toggleBtn = document.getElementById('toggleBtn');
         const statusDiv = document.getElementById('status');
         const thresholdSlider = document.getElementById('thresholdSlider');
         const thresholdValueDisplay = document.getElementById('thresholdValue');
+        const currentVolumeDisplay = document.getElementById('currentVolumeDisplay');
+        const hzDisplaySpan = document.getElementById('hzDisplay');
+        
         const fireProgressBar = document.getElementById('fireProgressBar');
         const carProgressBar = document.getElementById('carProgressBar');
         const momProgressBar = document.getElementById('momProgressBar');
-        const freqAnalysisDiv = document.getElementById('freqAnalysis');
-        const currentPitchSpan = document.getElementById('currentPitch');
-        const hzDisplaySpan = document.getElementById('hzDisplay');
-        const hiddenAudioPlayer = document.getElementById('hiddenAudioPlayer'); // 取得隱藏播放器
+        
+        const finalTextSpan = document.getElementById('finalText');
+        const interimTextSpan = document.getElementById('interimText');
 
-        // 自動讀取與儲存設定
+        // --- AI 語音引擎設定 ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;       
+            recognition.interimResults = true;   
+            recognition.lang = 'yue-Hant-HK';    
+
+            recognition.onresult = (event) => {
+                if (alarmTriggered) return;
+
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    else interimTranscript += event.results[i][0].transcript;
+                }
+
+                if (finalTranscript) finalTextSpan.textContent = finalTranscript + ' ';
+                interimTextSpan.textContent = interimTranscript;
+
+                // 檢查是否包含關鍵字
+                const combinedText = finalTranscript + interimTranscript;
+                let foundKeyword = MOM_KEYWORDS.some(keyword => combinedText.includes(keyword));
+                
+                if (foundKeyword) {
+                    momProgress = 100; // 聽到關鍵字，進度條直接爆滿
+                    momProgressBar.style.width = '100%';
+                    triggerAlarm('mom');
+                }
+            };
+
+            recognition.onerror = (e) => { console.warn("語音辨識錯誤:", e.error); };
+            
+            // 系統若自動關閉語音引擎，強制重啟
+            recognition.onend = () => {
+                if (isListening && recognition) {
+                    try { recognition.start(); } catch(e){}
+                }
+            };
+        } else {
+            interimTextSpan.textContent = "您的瀏覽器不支援 AI 語音辨識，請使用 Chrome。";
+        }
+
+        // --- 自動讀取音量設定 ---
         const savedThreshold = localStorage.getItem('alarmThreshold');
         if (savedThreshold) {
             VOLUME_THRESHOLD = parseInt(savedThreshold, 10);
@@ -157,77 +187,75 @@
             localStorage.setItem('alarmThreshold', VOLUME_THRESHOLD); 
         });
 
+        // --- 按鈕邏輯 ---
         toggleBtn.addEventListener('click', async () => {
-            if (isListening) {
-                stopListening();
-            } else {
-                await startListening();
-            }
+            if (isListening) stopListening();
+            else await startListening();
         });
 
         async function startListening() {
             try {
-                // 1. 索取麥克風權限
+                // 1. 取得麥克風 (共用給 Web Audio 和 Web Speech)
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
 
-                // 2. 🍏 iOS 破解核心：把收到的聲音餵給隱藏播放器
-                hiddenAudioPlayer.srcObject = stream;
-                hiddenAudioPlayer.play().catch(e => console.log("隱藏播放器啟動失敗", e));
-
-                // 3. 啟動分析引擎
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                // 2. 啟動物理頻率引擎
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextClass();
                 await audioContext.resume();
                 
                 analyser = audioContext.createAnalyser();
+                analyser.fftSize = 1024; 
                 microphone = audioContext.createMediaStreamSource(stream);
-
                 microphone.connect(analyser);
-                analyser.fftSize = 512; 
 
+                // 3. 啟動 AI 語音引擎
+                if (recognition) {
+                    finalTextSpan.textContent = '';
+                    interimTextSpan.textContent = '';
+                    try { recognition.start(); } catch(e){}
+                }
+
+                // 初始化狀態
                 isListening = true;
                 alarmTriggered = false;
                 soundHistory = [];
                 lastFrameTime = Date.now();
+                momProgress = 0;
                 
                 fireProgressBar.style.width = '0%'; 
                 carProgressBar.style.width = '0%';
                 momProgressBar.style.width = '0%';
-                freqAnalysisDiv.style.display = 'block'; 
                 
                 toggleBtn.textContent = '停止監聽';
                 toggleBtn.classList.add('stop');
-                statusDiv.textContent = '🟢 正在監聽環境聲音...';
+                statusDiv.textContent = '🟢 雙引擎監聽運作中...';
                 document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
 
-                detectSound();
+                detectSound(); // 啟動頻率分析迴圈
             } catch (err) {
-                alert('無法存取麥克風。請確保您已授予權限。');
+                alert('無法存取麥克風。請確認已允許權限！');
             }
         }
 
         function stopListening() {
             isListening = false;
             if (audioContext && audioContext.state !== 'closed') audioContext.close();
-            
-            // 關閉隱藏播放器
-            hiddenAudioPlayer.pause();
-            hiddenAudioPlayer.srcObject = null;
-            
             cancelAnimationFrame(animationId);
+            if (recognition) { try { recognition.stop(); } catch(e){} }
             
             toggleBtn.textContent = '開始監聽';
             toggleBtn.classList.remove('stop');
             statusDiv.textContent = '系統待命準備中...';
             document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
-            freqAnalysisDiv.style.display = 'none';
+            currentVolumeDisplay.textContent = '0';
+            hzDisplaySpan.textContent = '0';
             
             fireProgressBar.style.width = '0%';
             carProgressBar.style.width = '0%';
             momProgressBar.style.width = '0%';
-            
-            if ('vibrate' in navigator) navigator.vibrate(0); 
         }
 
+        // --- 物理頻率偵測邏輯 (負責火警與汽車) ---
         function detectSound() {
             if (!isListening) return;
 
@@ -250,113 +278,91 @@
                     maxIndex = i; 
                 }
             }
+            
             let averageVolume = sum / bufferLength;
+            currentVolumeDisplay.textContent = Math.round(averageVolume);
+            
             const isLoud = averageVolume > VOLUME_THRESHOLD;
-
             let detectedType = 'none';
-            let dominantFreq = 0;
 
             if (isLoud) {
                 const sampleRate = audioContext.sampleRate; 
                 const binWidth = sampleRate / analyser.fftSize;
-                dominantFreq = Math.round(maxIndex * binWidth);
-
+                const dominantFreq = Math.round(maxIndex * binWidth);
                 hzDisplaySpan.textContent = dominantFreq;
 
-                // 根據頻率分類三種聲音
                 if (dominantFreq > 1800) { 
                     detectedType = 'fire'; 
-                    currentPitchSpan.innerHTML = '<span class="freq-badge" style="background:#f44336">極高頻 (火警)</span>';
-                } else if (dominantFreq >= 1500 && dominantFreq <= 1800) {
-                    detectedType = 'mom'; 
-                    currentPitchSpan.innerHTML = '<span class="freq-badge" style="background:#ff9800">尖銳高音 (媽咪)</span>';
-                } else if (dominantFreq >= 300 && dominantFreq <= 1500) { 
+                } else if (dominantFreq >= 300 && dominantFreq <= 800) { 
                     detectedType = 'car';  
-                    currentPitchSpan.innerHTML = '<span class="freq-badge" style="background:#2196f3">中低頻 (汽車)</span>';
-                } else {
-                    currentPitchSpan.innerHTML = '<span style="color:#888">一般雜音</span>';
                 }
             } else {
-                currentPitchSpan.textContent = '安靜';
                 hzDisplaySpan.textContent = '0';
             }
 
             soundHistory.push({ time: now, duration: delta, type: detectedType });
             soundHistory = soundHistory.filter(item => (now - item.time) <= WINDOW_SIZE_MS);
 
-            let fireTime = 0;
-            let carTime = 0;
-            let momTime = 0;
+            let fireTime = 0, carTime = 0;
             for (let item of soundHistory) {
                 if (item.type === 'fire') fireTime += item.duration;
                 if (item.type === 'car') carTime += item.duration;
-                if (item.type === 'mom') momTime += item.duration;
             }
 
             if (!alarmTriggered) {
                 fireProgressBar.style.width = Math.min((fireTime / REQUIRED_FIRE_MS) * 100, 100) + '%';
                 carProgressBar.style.width = Math.min((carTime / REQUIRED_CAR_MS) * 100, 100) + '%';
-                momProgressBar.style.width = Math.min((momTime / REQUIRED_MOM_MS) * 100, 100) + '%';
             }
 
-            // 觸發判斷
             if (!alarmTriggered) {
-                if (fireTime >= REQUIRED_FIRE_MS) {
-                    triggerAlarm('fire');
-                } else if (carTime >= REQUIRED_CAR_MS) {
-                    triggerAlarm('car');
-                } else if (momTime >= REQUIRED_MOM_MS) {
-                    triggerAlarm('mom');
-                }
+                if (fireTime >= REQUIRED_FIRE_MS) triggerAlarm('fire');
+                else if (carTime >= REQUIRED_CAR_MS) triggerAlarm('car');
             }
 
             animationId = requestAnimationFrame(detectSound);
         }
 
+        // --- 觸發警報 ---
         function triggerAlarm(alarmType) {
             alarmTriggered = true;
             document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
 
             if (alarmType === 'fire') {
-                statusDiv.innerHTML = '<span style="color:#d32f2f; font-size:32px;">危險，速逃</span>';
+                statusDiv.innerHTML = '<span style="color:#d32f2f; font-size:32px;">危險，火警！速逃</span>';
                 document.body.classList.add('alert-fire');
                 fireProgressBar.style.width = '100%';
-                
-                // 急促長震動
                 if ('vibrate' in navigator) navigator.vibrate([1000, 500, 1000, 500, 2000]);
             } 
             else if (alarmType === 'car') {
-                statusDiv.innerHTML = '<span style="color:#1976d2; font-size:32px;">小心，有車</span>';
+                statusDiv.innerHTML = '<span style="color:#1976d2; font-size:32px;">小心，有車！</span>';
                 document.body.classList.add('alert-car');
                 carProgressBar.style.width = '100%';
-                
-                // 短促兩下震動
                 if ('vibrate' in navigator) navigator.vibrate([400, 200, 400]);
             }
             else if (alarmType === 'mom') {
-                statusDiv.innerHTML = '<span style="color:#e65100; font-size:30px;">媽咪發火，快啲認錯！</span>';
+                statusDiv.innerHTML = '<span style="color:#e65100; font-size:30px;">🚨 有人叫你：「俊傑」！</span>';
                 document.body.classList.add('alert-mom');
                 momProgressBar.style.width = '100%';
-                
-                // 節奏型警告震動 (打屁股節奏)
-                if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 200, 100, 500]);
+                if ('vibrate' in navigator) navigator.vibrate([300, 100, 300, 100, 500]);
             }
 
             soundHistory = [];
 
-            // 8秒後自動解除
             setTimeout(() => {
                 alarmTriggered = false;
                 lastFrameTime = Date.now(); 
+                momProgress = 0;
                 fireProgressBar.style.width = '0%'; 
                 carProgressBar.style.width = '0%'; 
                 momProgressBar.style.width = '0%'; 
+                finalTextSpan.textContent = '';
+                interimTextSpan.textContent = '等待聲音輸入...';
                 
                 if (isListening) {
-                   statusDiv.textContent = '🟢 正在重新監聽...';
+                   statusDiv.textContent = '🟢 雙引擎監聽運作中...';
                    document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
                 }
-            }, 8000);
+            }, 6000);
         }
     </script>
 </body>
