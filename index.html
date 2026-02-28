@@ -3,14 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>環境聲響與 AI 語音雙引擎輔助器</title>
+    <title>眼聽八方 (Eye-Hear) 👀</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f0f0f0; transition: background-color 0.3s ease; }
-        #container { text-align: center; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 95%; width: 480px; box-sizing: border-box; margin: 20px 0; }
-        h1 { color: #333; margin-top: 0; font-size: 24px;}
+        #container { text-align: center; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 95%; width: 480px; box-sizing: border-box; margin: 20px 0; overflow: hidden; }
+        h1 { color: #333; margin-top: 0; font-size: 26px; font-weight: 800;}
         p { color: #666; font-size: 14px; margin-bottom: 15px;}
         
-        #status { font-size: 22px; font-weight: bold; margin: 15px 0; color: #555; min-height: 50px; line-height: 1.4; }
+        /* 狀態與跑馬燈區塊 */
+        #status-container { margin: 15px 0; min-height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; }
+        #status { font-size: 20px; font-weight: bold; color: #555; width: 100%; }
+        
+        /* 跑馬燈與閃爍動畫設定 */
+        .marquee-mode { 
+            white-space: nowrap;
+            font-size: 40px !important; /* 超大字體 */
+            font-weight: 900 !important;
+            display: inline-block;
+            padding-left: 100%; /* 從最右邊開始 */
+            animation: marqueeScroll 4s linear infinite, textFlash 0.3s infinite alternate; 
+        }
+
+        @keyframes marqueeScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        @keyframes textFlash {
+            from { opacity: 1; text-shadow: 0px 0px 10px rgba(255,255,255,0.8); }
+            to { opacity: 0.6; text-shadow: 0px 0px 20px currentColor; }
+        }
         
         /* 控制面板區 */
         .control-panel { background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px; text-align: left; border: 1px solid #e9ecef; }
@@ -32,29 +53,33 @@
         
         #fireProgressBar { height: 100%; width: 0%; background-color: #f44336; transition: width 0.1s linear; }
         #carProgressBar { height: 100%; width: 0%; background-color: #2196f3; transition: width 0.1s linear; }
-        #momProgressBar { height: 100%; width: 0%; background-color: #ff9800; transition: width 0.2s ease-out; }
+        #doorbellProgressBar { height: 100%; width: 0%; background-color: #9c27b0; transition: width 0.1s linear; }
+        #nameProgressBar { height: 100%; width: 0%; background-color: #ff9800; transition: width 0.2s ease-out; }
         
         button { padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 10px; transition: 0.2s; width: 100%; }
         button:hover { background-color: #0056b3; }
         button.stop { background-color: #dc3545; }
         
-        /* 警報閃爍動畫 */
+        /* 警報全螢幕閃爍動畫 */
         .alert-fire { animation: flashFire 0.6s infinite alternate; }
         .alert-car { animation: flashCar 0.6s infinite alternate; }
-        .alert-mom { animation: flashMom 0.4s infinite alternate; } 
+        .alert-doorbell { animation: flashDoorbell 0.5s infinite alternate; } 
+        .alert-name { animation: flashName 0.4s infinite alternate; } 
+        
         @keyframes flashFire { from { background-color: #ffcccc; } to { background-color: #ff0000; } }
         @keyframes flashCar { from { background-color: #bbdefb; } to { background-color: #1976d2; } }
-        @keyframes flashMom { from { background-color: #ffe0b2; } to { background-color: #ff9800; } }
+        @keyframes flashDoorbell { from { background-color: #e1bee7; } to { background-color: #9c27b0; } }
+        @keyframes flashName { from { background-color: #ffe0b2; } to { background-color: #ff9800; } }
     </style>
 </head>
 <body>
     <div id="container">
-        <h1>🔔 聲響與語音雙引擎</h1>
-        <p>頻率偵測火警/汽車，AI 語音尋找特定名字。</p>
+        <h1>👀 眼聽八方 (Eye-Hear)</h1>
+        <p>專屬視覺化聽覺輔助系統：火警 / 汽車 / 門鐘 / 語音呼叫</p>
         
         <div class="control-panel">
             <div class="control-header">
-                <span>火警/汽車觸發門檻</span>
+                <span>環境聲音觸發門檻</span>
                 <span id="thresholdValue" style="color:#007bff">80</span>
             </div>
             <div class="slider-container">
@@ -75,18 +100,24 @@
         </div>
 
         <div class="progress-section">
-            <div class="progress-label"><span>🔥 火警鐘聲 (>1800Hz)</span></div>
+            <div class="progress-label"><span>🔥 火警鐘聲</span></div>
             <div class="progress-container"><div id="fireProgressBar"></div></div>
             
-            <div class="progress-label"><span>🚗 汽車喇叭 (300~800Hz)</span></div>
+            <div class="progress-label"><span>🚗 汽車喇叭</span></div>
             <div class="progress-container"><div id="carProgressBar"></div></div>
 
-            <div class="progress-label"><span>👩‍🦱 呼叫名字 (AI 辨識 "俊傑")</span></div>
-            <div class="progress-container"><div id="momProgressBar"></div></div>
+            <div class="progress-label"><span>🚪 門鐘叮噹</span></div>
+            <div class="progress-container"><div id="doorbellProgressBar"></div></div>
+
+            <div class="progress-label"><span>🗣️ 呼叫名字</span></div>
+            <div class="progress-container"><div id="nameProgressBar"></div></div>
         </div>
 
-        <div id="status">系統待命準備中...</div>
-        <button id="toggleBtn">開始監聽</button>
+        <div id="status-container">
+            <div id="status">系統待命準備中...</div>
+        </div>
+
+        <button id="toggleBtn">開始運作</button>
     </div>
 
     <script>
@@ -101,15 +132,16 @@
         let VOLUME_THRESHOLD = 80;           
         const WINDOW_SIZE_MS = 6000;           
         
-        const REQUIRED_FIRE_MS = 3500; // 火警需要持續 3.5 秒
-        const REQUIRED_CAR_MS = 1500;  // 汽車喇叭持續 1.5 秒
-        let momProgress = 0;           // 語音辨識的進度
+        const REQUIRED_FIRE_MS = 3500;     // 火警需要持續 3.5 秒
+        const REQUIRED_CAR_MS = 1500;      // 汽車喇叭持續 1.5 秒
+        const REQUIRED_DOORBELL_MS = 1500; // 門鐘持續 1.5 秒
+        let nameProgress = 0;              // 語音辨識的進度
 
         let soundHistory = []; 
         let lastFrameTime = 0; 
 
-        // 🚨 這裡設定要觸發警報的關鍵字！
-        const MOM_KEYWORDS = ["俊傑", "衰仔", "死仔", "激死我", "聽話"];
+        // 🚨 設定要觸發警報的關鍵字 (已加入日常實用字眼)
+        const NAME_KEYWORDS = ["俊傑", "亞仔","衰仔", "死仔", "聽話", "食飯", "過嚟", "幫手"];
 
         // --- 取得 HTML 元素 ---
         const toggleBtn = document.getElementById('toggleBtn');
@@ -121,7 +153,8 @@
         
         const fireProgressBar = document.getElementById('fireProgressBar');
         const carProgressBar = document.getElementById('carProgressBar');
-        const momProgressBar = document.getElementById('momProgressBar');
+        const doorbellProgressBar = document.getElementById('doorbellProgressBar');
+        const nameProgressBar = document.getElementById('nameProgressBar');
         
         const finalTextSpan = document.getElementById('finalText');
         const interimTextSpan = document.getElementById('interimText');
@@ -152,18 +185,17 @@
 
                 // 檢查是否包含關鍵字
                 const combinedText = finalTranscript + interimTranscript;
-                let foundKeyword = MOM_KEYWORDS.some(keyword => combinedText.includes(keyword));
+                let foundKeyword = NAME_KEYWORDS.some(keyword => combinedText.includes(keyword));
                 
                 if (foundKeyword) {
-                    momProgress = 100; // 聽到關鍵字，進度條直接爆滿
-                    momProgressBar.style.width = '100%';
-                    triggerAlarm('mom');
+                    nameProgress = 100;
+                    nameProgressBar.style.width = '100%';
+                    triggerAlarm('name');
                 }
             };
 
             recognition.onerror = (e) => { console.warn("語音辨識錯誤:", e.error); };
             
-            // 系統若自動關閉語音引擎，強制重啟
             recognition.onend = () => {
                 if (isListening && recognition) {
                     try { recognition.start(); } catch(e){}
@@ -195,10 +227,8 @@
 
         async function startListening() {
             try {
-                // 1. 取得麥克風 (共用給 Web Audio 和 Web Speech)
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
 
-                // 2. 啟動物理頻率引擎
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 audioContext = new AudioContextClass();
                 await audioContext.resume();
@@ -208,30 +238,30 @@
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
 
-                // 3. 啟動 AI 語音引擎
                 if (recognition) {
                     finalTextSpan.textContent = '';
                     interimTextSpan.textContent = '';
                     try { recognition.start(); } catch(e){}
                 }
 
-                // 初始化狀態
                 isListening = true;
                 alarmTriggered = false;
                 soundHistory = [];
                 lastFrameTime = Date.now();
-                momProgress = 0;
+                nameProgress = 0;
                 
                 fireProgressBar.style.width = '0%'; 
                 carProgressBar.style.width = '0%';
-                momProgressBar.style.width = '0%';
+                doorbellProgressBar.style.width = '0%';
+                nameProgressBar.style.width = '0%';
                 
-                toggleBtn.textContent = '停止監聽';
+                toggleBtn.textContent = '停止運作';
                 toggleBtn.classList.add('stop');
-                statusDiv.textContent = '🟢 雙引擎監聽運作中...';
-                document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
+                
+                resetStatusText('🟢 雙引擎運作中...');
+                document.body.classList.remove('alert-fire', 'alert-car', 'alert-doorbell', 'alert-name');
 
-                detectSound(); // 啟動頻率分析迴圈
+                detectSound(); 
             } catch (err) {
                 alert('無法存取麥克風。請確認已允許權限！');
             }
@@ -243,19 +273,21 @@
             cancelAnimationFrame(animationId);
             if (recognition) { try { recognition.stop(); } catch(e){} }
             
-            toggleBtn.textContent = '開始監聽';
+            toggleBtn.textContent = '開始運作';
             toggleBtn.classList.remove('stop');
-            statusDiv.textContent = '系統待命準備中...';
-            document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
+            
+            resetStatusText('系統待命準備中...');
+            document.body.classList.remove('alert-fire', 'alert-car', 'alert-doorbell', 'alert-name');
             currentVolumeDisplay.textContent = '0';
             hzDisplaySpan.textContent = '0';
             
             fireProgressBar.style.width = '0%';
             carProgressBar.style.width = '0%';
-            momProgressBar.style.width = '0%';
+            doorbellProgressBar.style.width = '0%';
+            nameProgressBar.style.width = '0%';
         }
 
-        // --- 物理頻率偵測邏輯 (負責火警與汽車) ---
+        // --- 物理頻率偵測邏輯 (負責火警、門鐘、汽車) ---
         function detectSound() {
             if (!isListening) return;
 
@@ -293,77 +325,6 @@
 
                 if (dominantFreq > 1800) { 
                     detectedType = 'fire'; 
-                } else if (dominantFreq >= 300 && dominantFreq <= 800) { 
-                    detectedType = 'car';  
+                } else if (dominantFreq >= 800 && dominantFreq <= 1800) { 
+                    detectedType = 'doorbell';  
                 }
-            } else {
-                hzDisplaySpan.textContent = '0';
-            }
-
-            soundHistory.push({ time: now, duration: delta, type: detectedType });
-            soundHistory = soundHistory.filter(item => (now - item.time) <= WINDOW_SIZE_MS);
-
-            let fireTime = 0, carTime = 0;
-            for (let item of soundHistory) {
-                if (item.type === 'fire') fireTime += item.duration;
-                if (item.type === 'car') carTime += item.duration;
-            }
-
-            if (!alarmTriggered) {
-                fireProgressBar.style.width = Math.min((fireTime / REQUIRED_FIRE_MS) * 100, 100) + '%';
-                carProgressBar.style.width = Math.min((carTime / REQUIRED_CAR_MS) * 100, 100) + '%';
-            }
-
-            if (!alarmTriggered) {
-                if (fireTime >= REQUIRED_FIRE_MS) triggerAlarm('fire');
-                else if (carTime >= REQUIRED_CAR_MS) triggerAlarm('car');
-            }
-
-            animationId = requestAnimationFrame(detectSound);
-        }
-
-        // --- 觸發警報 ---
-        function triggerAlarm(alarmType) {
-            alarmTriggered = true;
-            document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
-
-            if (alarmType === 'fire') {
-                statusDiv.innerHTML = '<span style="color:#d32f2f; font-size:32px;">危險，火警！速逃</span>';
-                document.body.classList.add('alert-fire');
-                fireProgressBar.style.width = '100%';
-                if ('vibrate' in navigator) navigator.vibrate([1000, 500, 1000, 500, 2000]);
-            } 
-            else if (alarmType === 'car') {
-                statusDiv.innerHTML = '<span style="color:#1976d2; font-size:32px;">小心，有車！</span>';
-                document.body.classList.add('alert-car');
-                carProgressBar.style.width = '100%';
-                if ('vibrate' in navigator) navigator.vibrate([400, 200, 400]);
-            }
-            else if (alarmType === 'mom') {
-                statusDiv.innerHTML = '<span style="color:#e65100; font-size:30px;">🚨 有人叫你：「俊傑」！</span>';
-                document.body.classList.add('alert-mom');
-                momProgressBar.style.width = '100%';
-                if ('vibrate' in navigator) navigator.vibrate([300, 100, 300, 100, 500]);
-            }
-
-            soundHistory = [];
-
-            setTimeout(() => {
-                alarmTriggered = false;
-                lastFrameTime = Date.now(); 
-                momProgress = 0;
-                fireProgressBar.style.width = '0%'; 
-                carProgressBar.style.width = '0%'; 
-                momProgressBar.style.width = '0%'; 
-                finalTextSpan.textContent = '';
-                interimTextSpan.textContent = '等待聲音輸入...';
-                
-                if (isListening) {
-                   statusDiv.textContent = '🟢 雙引擎監聽運作中...';
-                   document.body.classList.remove('alert-fire', 'alert-car', 'alert-mom');
-                }
-            }, 6000);
-        }
-    </script>
-</body>
-</html>
